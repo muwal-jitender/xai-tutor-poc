@@ -34,3 +34,5 @@ It asks questions, evaluates understanding, flags misconceptions, and _explains 
 - .venv\Scripts\Activate.ps1
 - python -m pip install --upgrade pip
 - pip install -r requirements.txt
+- uvicorn app:app --reload
+

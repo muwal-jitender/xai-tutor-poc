@@ -1,0 +1,13 @@
+skills:
+  - id: prereq.math.basics
+    title: Math Basics
+    prerequisites: []
+  - id: prereq.algorithms.vocab
+    title: Algorithmic Vocabulary
+    prerequisites: [prereq.math.basics]
+  - id: core.bigO.time
+    title: Time Complexity (Big O)
+    prerequisites: [prereq.algorithms.vocab]
+  - id: core.bigO.space
+    title: Space Complexity (Big O)
+    prerequisites: [core.bigO.time]

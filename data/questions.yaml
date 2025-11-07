@@ -1,0 +1,62 @@
+questions:
+  # Math Basics (3)
+  - id: q1
+    skill: prereq.math.basics
+    type: mcq
+    prompt: Which symbol means "greater than"?
+    choices: [<, >, =, ≤]
+    answer: ">"
+  - id: q2
+    skill: prereq.math.basics
+    type: mcq
+    prompt: What is √16 ?
+    choices: [2, 3, 4, 8]
+    answer: 4
+  - id: q3
+    skill: prereq.math.basics
+    type: mcq
+    prompt: For any non-zero x, (x)^0 equals?
+    choices: [0, 1, x, undefined]
+    answer: 1
+
+  # Algorithmic Vocabulary (3)
+  - id: q4
+    skill: prereq.algorithms.vocab
+    type: mcq
+    prompt: In algorithms, "input size n" usually refers to?
+    choices: [Number of lines of code, Number of test cases, Size/length of the data, CPU speed]
+    answer: Size/length of the data
+  - id: q5
+    skill: prereq.algorithms.vocab
+    type: mcq
+    prompt: A "step" in time complexity typically means?
+    choices: [One second, One machine cycle, One elementary operation, One function]
+    answer: One elementary operation
+  - id: q6
+    skill: prereq.algorithms.vocab
+    type: mcq
+    prompt: Which best describes "worst-case" complexity?
+    choices: [Average behavior, Best behavior, Maximum cost over all valid inputs, Random cost]
+    answer: Maximum cost over all valid inputs
+
+  # Big-O Time (2)
+  - id: q7
+    skill: core.bigO.time
+    type: mcq
+    prompt: Which grows faster as n increases?
+    choices: [n, n log n, n^2, log n]
+    answer: n^2
+  - id: q8
+    skill: core.bigO.time
+    type: mcq
+    prompt: If an algorithm doubles a loop from 1..n to 1..2n, Big-O time becomes?
+    choices: [O(1), O(log n), O(n), O(n^2)]
+    answer: O(n)
+
+  # Big-O Space (1)
+  - id: q9
+    skill: core.bigO.space
+    type: mcq
+    prompt: Using an extra array of size n implies space complexity of?
+    choices: [O(1), O(log n), O(n), O(n^2)]
+    answer: O(n)

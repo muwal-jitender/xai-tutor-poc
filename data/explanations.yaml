@@ -1,0 +1,22 @@
+templates:
+  offer_diagnostic: >
+    To tailor your path, I recommend a quick diagnostic (5–8 items).
+    It helps confirm prerequisites before Big-O. You can skip if you prefer.
+
+  review_prereq: >
+    Recommending a short review of {{skill_title}} because your score was {{score_correct}}/{{score_total}}.
+    This concept supports {{next_title}}. If you had scored ≥ {{threshold}}, I would have advanced.
+
+  advance: >
+    Moving to {{next_title}} because your recent score on {{from_title}} was {{score_correct}}/{{score_total}} (≥ {{threshold}}).
+    Confidence: {{confidence}}.
+
+  ask_question_intro: >
+    Let’s check {{skill_title}} with a quick question.
+
+  answer_content_note: >
+    Here’s a concise explanation of {{topic}}. Since you skipped diagnostics, consider a 5-question check
+    if any part feels unclear.
+
+  generic_counterfactual: >
+    If your performance on {{from_title}} were higher, I would proceed to {{next_title}}.
