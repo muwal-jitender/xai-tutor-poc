@@ -6,6 +6,7 @@ from datetime import datetime
 
 from core.orchestrator import handle_event, grade_answer
 from core.state import reset_state
+from core.audit import log_event, audit_path
 
 router = APIRouter()
 
@@ -35,15 +36,19 @@ def health():
 @router.post("/session/ingest", response_model=ApiResponse)
 def ingest(event: IngestEvent):
     # Grade if needed
+    log_event(event.session_id, "ingest", event.model_dump())
     graded = None
     if event.action == "answer":
         if not event.question_id:
             raise HTTPException(status_code=400, detail="question_id required when action=answer")
         graded = grade_answer(event.session_id, event.question_id, event.answer or "")
+        log_event(event.session_id, "graded", graded)
         if "error" in graded:
             raise HTTPException(status_code=400, detail=graded["error"])
 
     result = handle_event(event.session_id, event.message, event.action)
+
+    log_event(event.session_id, "decision", result)
 
     return ApiResponse(
         server_time=_now(),
@@ -58,8 +63,10 @@ def ingest(event: IngestEvent):
 
 @router.post("/session/next", response_model=ApiResponse)
 def session_next(session_id: str):
+    log_event(session_id, "ingest", {"action": "continue"})
     """Shortcut for action='continue' without sending a message."""
     result = handle_event(session_id, user_message=None, action="continue")
+    log_event(session_id, "decision", result)
     return ApiResponse(
         server_time=_now(),
         session_id=session_id,
@@ -74,6 +81,7 @@ def session_next(session_id: str):
 @router.post("/session/reset")
 def session_reset(session_id: str):
     reset_state(session_id)
+    log_event(session_id, "reset", {"note": "state cleared"})
     return {"status": "reset", "session_id": session_id}
 
 # ----------- Utils -----------
