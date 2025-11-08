@@ -1,32 +1,81 @@
 # api/routes.py
-from fastapi import APIRouter
-from pydantic import BaseModel
-from typing import Optional
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, Field
+from typing import Optional, Literal
 from datetime import datetime
+
 from core.orchestrator import handle_event, grade_answer
+from core.state import reset_state
 
 router = APIRouter()
 
+# ----------- Schemas -----------
 class IngestEvent(BaseModel):
-    session_id: str
+    session_id: str = Field(..., min_length=1)
     message: Optional[str] = None
-    action: Optional[str] = None  # "start" | "content_only" | "answer"
+    action: Optional[Literal["start", "continue", "content_only", "answer"]] = None
     question_id: Optional[str] = None
     answer: Optional[str] = None
 
+class ApiResponse(BaseModel):
+    server_time: str
+    session_id: str
+    action: Optional[str] = None
+    next_node: Optional[str] = None
+    from_node: Optional[str] = None
+    confidence: Optional[str] = None
+    ui: dict
+    graded: Optional[dict] = None
+
+# ----------- Routes -----------
 @router.get("/health")
 def health():
     return {"status": "ok", "service": "xai-tutor-poc"}
 
-@router.post("/session/ingest")
+@router.post("/session/ingest", response_model=ApiResponse)
 def ingest(event: IngestEvent):
-    # If it's an answer, grade then continue
+    # Grade if needed
     graded = None
-    if event.action == "answer" and event.question_id is not None:
+    if event.action == "answer":
+        if not event.question_id:
+            raise HTTPException(status_code=400, detail="question_id required when action=answer")
         graded = grade_answer(event.session_id, event.question_id, event.answer or "")
+        if "error" in graded:
+            raise HTTPException(status_code=400, detail=graded["error"])
+
     result = handle_event(event.session_id, event.message, event.action)
-    return {
-        "server_time": datetime.utcnow().isoformat() + "Z",
-        "graded": graded,
-        "result": result
-    }
+
+    return ApiResponse(
+        server_time=_now(),
+        session_id=event.session_id,
+        action=result.get("action"),
+        next_node=result.get("next_node"),
+        from_node=result.get("from_node"),
+        confidence=result.get("confidence"),
+        ui=result.get("ui", {}),
+        graded=graded
+    )
+
+@router.post("/session/next", response_model=ApiResponse)
+def session_next(session_id: str):
+    """Shortcut for action='continue' without sending a message."""
+    result = handle_event(session_id, user_message=None, action="continue")
+    return ApiResponse(
+        server_time=_now(),
+        session_id=session_id,
+        action=result.get("action"),
+        next_node=result.get("next_node"),
+        from_node=result.get("from_node"),
+        confidence=result.get("confidence"),
+        ui=result.get("ui", {}),
+        graded=None
+    )
+
+@router.post("/session/reset")
+def session_reset(session_id: str):
+    reset_state(session_id)
+    return {"status": "reset", "session_id": session_id}
+
+# ----------- Utils -----------
+def _now() -> str:
+    return datetime.utcnow().isoformat() + "Z"

@@ -24,3 +24,7 @@ def update_score(state: LearnerState, node: str, correct: bool, total_for_node: 
         sc.correct += 1
     sc.total = max(sc.total, total_for_node)
     state.scores[node] = sc
+
+def reset_state(session_id: str):
+    if session_id in _STORE:
+        del _STORE[session_id]
