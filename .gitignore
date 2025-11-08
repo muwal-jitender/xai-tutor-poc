@@ -5,3 +5,4 @@ __pycache__/
 .env
 xai_tutor.db
 logs/
+.env

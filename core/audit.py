@@ -2,8 +2,9 @@
 import json, os
 from datetime import datetime
 from pathlib import Path
+from core.settings import AUDIT_DIR
 
-LOG_DIR = Path(os.getenv("AUDIT_DIR", "logs"))
+LOG_DIR = Path(AUDIT_DIR)
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 LOG_FILE = LOG_DIR / "audit.jsonl"
 

@@ -1,6 +1,15 @@
 # core/config.py
-import os
-from pathlib import Path
+"""
+Compatibility shim.
+All configuration is defined in core.settings (loaded from .env).
+This module simply re-exports those values for legacy imports.
+"""
 
-USE_SQLITE = os.getenv("USE_SQLITE", "0") in ("1", "true", "True")
-DB_PATH = os.getenv("DB_PATH", str(Path(__file__).resolve().parent.parent / "xai_tutor.db"))
+from core.settings import (
+    USE_SQLITE,
+    DB_PATH,
+    AUDIT_DIR,
+    CORS_ORIGINS,
+)
+
+__all__ = ["USE_SQLITE", "DB_PATH", "AUDIT_DIR", "CORS_ORIGINS"]
