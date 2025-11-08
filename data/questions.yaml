@@ -4,7 +4,7 @@ questions:
     skill: prereq.math.basics
     type: mcq
     prompt: Which symbol means "greater than"?
-    choices: [<, >, =, ≤]
+    choices: ["<", ">", "=", "≤"]
     answer: ">"
   - id: q2
     skill: prereq.math.basics
