@@ -4,6 +4,7 @@ from core.loaders import load_skill_graph, load_questions
 from core.state import get_state, update_score
 from core.policy import decide_next, SkillScore
 from core.templating import render, titles_for
+from core.state import save_state  # add at top
 
 def _pending_items_in_node(state, node_id) -> int:
     q_by_skill = load_questions()["by_skill"]
@@ -15,10 +16,18 @@ def _next_question(state, node_id) -> Dict[str, Any]:
     q_by_skill = load_questions()["by_skill"]
     idx = state.pending_index_per_node.get(node_id, 0)
     items = q_by_skill.get(node_id, [])
+
     if idx >= len(items):
         return {}
+
+    # Increment pending index
     state.pending_index_per_node[node_id] = idx + 1
+
+    # Do NOT call save_state here — session_id is unknown.
+    # Persistence is done in handle_event() after this returns.
+
     return items[idx]
+
 
 def handle_event(session_id: str, user_message: str | None, action: str | None) -> Dict[str, Any]:
     sg = load_skill_graph()
@@ -73,6 +82,7 @@ def handle_event(session_id: str, user_message: str | None, action: str | None) 
         q = _next_question(state, decision.next_node)
         ui["rationale"] = render("ask_question_intro", {"skill_title": titles.get(decision.next_node, "")})
         ui["question"] = q
+        save_state(session_id, state)
 
     elif decision.action == "REVIEW_PREREQ":
         base = render("review_prereq", ctx)
@@ -83,6 +93,7 @@ def handle_event(session_id: str, user_message: str | None, action: str | None) 
         except Exception:
             ui["rationale"] = base
         state.current_node = decision.next_node
+        save_state(session_id, state)
 
     elif decision.action == "ADVANCE":
         ui["rationale"] = render("advance", ctx)
@@ -113,5 +124,5 @@ def grade_answer(session_id: str, question_id: str, user_answer: str) -> Dict[st
     # update score for skill
     total_for_node = len(load_questions()["by_skill"].get(q["skill"], []))
     update_score(state, q["skill"], correct, total_for_node)
-
+    save_state(session_id, state)
     return {"correct": correct, "skill": q["skill"], "expected": q["answer"]}
