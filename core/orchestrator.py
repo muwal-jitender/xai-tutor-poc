@@ -45,7 +45,13 @@ def handle_event(session_id: str, user_message: str | None, action: str | None) 
     )
 
     # Build rationale context
-    titles = titles_for({decision.next_node, decision.from_node} - {None})
+    ids = set()
+    if decision.next_node:
+        ids.add(decision.next_node)
+    if decision.from_node:
+        ids.add(decision.from_node)
+    titles = titles_for(ids)
+
     ev = decision.evidence or {}
     ctx = {
         **ev,
@@ -69,7 +75,13 @@ def handle_event(session_id: str, user_message: str | None, action: str | None) 
         ui["question"] = q
 
     elif decision.action == "REVIEW_PREREQ":
-        ui["rationale"] = render("review_prereq", ctx)
+        base = render("review_prereq", ctx)
+        # add a short counterfactual line (optional)
+        try:
+            cf = render("review_prereq_counterfactual", ctx)
+            ui["rationale"] = base + " " + cf
+        except Exception:
+            ui["rationale"] = base
         state.current_node = decision.next_node
 
     elif decision.action == "ADVANCE":

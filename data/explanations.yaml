@@ -20,3 +20,8 @@ templates:
 
   generic_counterfactual: >
     If your performance on {{from_title}} were higher, I would proceed to {{next_title}}.
+
+  review_prereq_counterfactual: >
+    If your score on {{skill_title}} had reached {{threshold}}/{{score_total}},
+    I would have advanced to {{next_title}}. For now, a short review will help.
+
