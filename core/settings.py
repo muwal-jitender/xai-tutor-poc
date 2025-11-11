@@ -13,4 +13,5 @@ def _bool(key: str, default: bool = False) -> bool:
 USE_SQLITE = _bool("USE_SQLITE", False)
 DB_PATH = os.getenv("DB_PATH", "./xai_tutor.db")
 AUDIT_DIR = os.getenv("AUDIT_DIR", "./logs")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()]

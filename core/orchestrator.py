@@ -5,6 +5,8 @@ from core.state import get_state, update_score
 from core.policy import decide_next, SkillScore
 from core.templating import render, titles_for
 from core.state import save_state  # add at top
+from core.llm_gemini import gemini_generate
+
 
 def _pending_items_in_node(state, node_id) -> int:
     q_by_skill = load_questions()["by_skill"]
@@ -33,6 +35,91 @@ def handle_event(session_id: str, user_message: str | None, action: str | None) 
     sg = load_skill_graph()
     prereqs = sg["prerequisites"]
     state = get_state(session_id)
+
+    # --- Handle explicit Diagnostic choices from UI (short-circuit the policy) ---
+    if action == "continue" and user_message:
+        msg = user_message.strip().lower()
+
+        # Diagnostic: Yes → start questions on the first prereq
+        if msg in ("diagnostic: yes", "diagnostic_yes", "yes"):
+            state.skipped_diagnostic = False
+            q = _next_question(state, "prereq.math.basics")
+            save_state(session_id, state)
+            return {
+                "action": "ASK_QUESTION",
+                "next_node": "prereq.math.basics",
+                "from_node": None,
+                "confidence": "medium",
+                "ui": {
+                    "rationale": render("ask_question_intro", {"skill_title": "Math Basics"}),
+                    "question": q,
+                    "options": []
+                }
+            }
+
+        # Diagnostic: No → NO QUESTIONS; fetch a friendly primer via Gemini
+        if msg in ("diagnostic: no", "diagnostic_no", "no"):
+            state.skipped_diagnostic = True
+            save_state(session_id, state)
+
+            text = gemini_generate(
+                "Explain the prerequisites for learning Data Structures and Algorithms "
+                "in simple terms. Focus on Big-O intuition, core vocabulary, and how to "
+                "approach problem solving. Keep it friendly, structured, and concise."
+            )
+
+            return {
+                "action": "ANSWER_CONTENT",
+                "next_node": "prereq.math.basics",   # keep focus; no quiz started
+                "from_node": None,
+                "confidence": "medium",
+                "ui": {
+                    "rationale": text,
+                    "question": None,
+                    "options": ["Start with Big-O", "Review Algorithmic Vocabulary", "Take Diagnostic Later"]
+                }
+            }
+
+        # Optional follow-ups after skipping diagnostic (content-only)
+        if msg == "start with big-o":
+            return {
+                "action": "ANSWER_CONTENT",
+                "next_node": "core.bigO.time",
+                "from_node": None,
+                "confidence": "medium",
+                "ui": {
+                    "rationale": "Here’s a concise overview of Time Complexity (Big-O):\n• Big-O is an upper bound on growth...\n• Common classes: O(1), O(log n), O(n), O(n log n), O(n²)\n• Use it to reason about scalability.\n\nAsk for examples or say ‘give me a quick exercise’.",
+                    "question": None,
+                    "options": []
+                }
+            }
+
+        if msg == "review algorithmic vocabulary":
+            return {
+                "action": "ANSWER_CONTENT",
+                "next_node": "prereq.algorithms.vocab",
+                "from_node": None,
+                "confidence": "medium",
+                "ui": {
+                    "rationale": "Key terms you’ll see:\n• Input size n, operation count, worst/average case, complexity class\n• Stable/unstable sorting, in-place vs. extra space\n\nSay ‘continue’ for more or ‘examples’ to see usage.",
+                    "question": None,
+                    "options": []
+                }
+            }
+
+        if msg == "take diagnostic later":
+            return {
+            "action": "ANSWER_CONTENT",
+            "next_node": None,
+            "from_node": None,
+            "confidence": "medium",
+            "ui": {
+                "rationale": "Okay. We’ll proceed without a diagnostic. You can start with a topic or ask me anything. You can take the diagnostic anytime from the menu.",
+                "question": None,
+                "options": []
+            }
+        }
+
 
     # Infer intent
     if action == "content_only":

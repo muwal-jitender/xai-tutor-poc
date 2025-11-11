@@ -5,3 +5,4 @@ PyYAML
 Jinja2
 python-dotenv
 httpx
+google-generativeai>=0.3.0
