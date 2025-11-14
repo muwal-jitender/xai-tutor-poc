@@ -30,6 +30,32 @@ def _next_question(state, node_id) -> Dict[str, Any]:
 
     return items[idx]
 
+def _result(
+    action: str,
+    *,
+    content: str | None = None,
+    rationale: str | None = None,
+    options: list[str] | None = None,
+    question: dict | None = None,
+    next_node: str | None = None,
+    from_node: str | None = None,
+    confidence: str = "medium",
+    graded: dict | None = None,
+) -> dict:
+    return {
+        "action": action,
+        "next_node": next_node,
+        "from_node": from_node,
+        "confidence": confidence,
+        "graded": graded,
+        "ui": {
+            "content": content,      # <- main teaching body (Markdown)
+            "rationale": rationale,  # <- optional Why?
+            "options": options or [],
+            "question": question,
+        },
+    }
+
 
 def handle_event(session_id: str, user_message: str | None, action: str | None) -> Dict[str, Any]:
     sg = load_skill_graph()
@@ -62,23 +88,23 @@ def handle_event(session_id: str, user_message: str | None, action: str | None) 
             state.skipped_diagnostic = True
             save_state(session_id, state)
 
-            text = gemini_generate(
+            content_md, rationale_line = gemini_generate(
                 "Explain the prerequisites for learning Data Structures and Algorithms "
                 "in simple terms. Focus on Big-O intuition, core vocabulary, and how to "
                 "approach problem solving. Keep it friendly, structured, and concise."
             )
 
-            return {
-                "action": "ANSWER_CONTENT",
-                "next_node": "prereq.math.basics",   # keep focus; no quiz started
-                "from_node": None,
-                "confidence": "medium",
-                "ui": {
-                    "rationale": text,
-                    "question": None,
-                    "options": ["Start with Big-O", "Review Algorithmic Vocabulary", "Take Diagnostic Later"]
-                }
-            }
+            return _result(
+            "ANSWER_CONTENT",
+            content=content_md,         # main teaching text
+            rationale=rationale_line,   # short Why? (optional; UI can hide if empty)
+            options=[
+                "Start with Big-O",
+                "Review Algorithmic Vocabulary",
+                "Take Diagnostic Later",
+            ],
+            next_node="prereq.math.basics",
+        )
 
         # Optional follow-ups after skipping diagnostic (content-only)
         if msg == "start with big-o":

@@ -35,4 +35,6 @@ It asks questions, evaluates understanding, flags misconceptions, and _explains 
 - python -m pip install --upgrade pip
 - pip install -r requirements.txt
 - uvicorn app:app --reload
+- pip install -U google-genai
+- pip show <package-name>
 
