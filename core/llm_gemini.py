@@ -53,7 +53,7 @@ def gemini_generate(prompt_text):
 
 
         # Google sometimes returns lists; make it safe:
-        return extract_gemini_text(response.text)
+        return extract_gemini_text(response)
 
     except ServiceUnavailable as e:
             # This only runs if ALL retries failed (e.g., 60 seconds passed)

@@ -88,7 +88,7 @@ def handle_event(session_id: str, user_message: str | None, action: str | None) 
             state.skipped_diagnostic = True
             save_state(session_id, state)
 
-            content_md, rationale_line = gemini_generate(
+            content_md = gemini_generate(
                 "Explain the prerequisites for learning Data Structures and Algorithms "
                 "in simple terms. Focus on Big-O intuition, core vocabulary, and how to "
                 "approach problem solving. Keep it friendly, structured, and concise."
@@ -97,7 +97,7 @@ def handle_event(session_id: str, user_message: str | None, action: str | None) 
             return _result(
             "ANSWER_CONTENT",
             content=content_md,         # main teaching text
-            rationale=rationale_line,   # short Why? (optional; UI can hide if empty)
+            rationale="Some test rationale",   # short Why? (optional; UI can hide if empty)
             options=[
                 "Start with Big-O",
                 "Review Algorithmic Vocabulary",
@@ -150,6 +150,20 @@ def handle_event(session_id: str, user_message: str | None, action: str | None) 
     # Infer intent
     if action == "content_only":
         intent = "CONTENT_ONLY"
+        content_md = gemini_generate(
+                user_message
+            )
+
+        return _result(
+            "ANSWER_CONTENT",
+            content=content_md,         # main teaching text
+            rationale="Some test rationale",   # short Why? (optional; UI can hide if empty)
+            options=[
+
+            ],
+            next_node="prereq.math.basics",
+            from_node= "core.bigO.time",
+        )
     elif action == "start" or user_message:
         intent = "START" if action == "start" else "CONTINUE"
     else:
